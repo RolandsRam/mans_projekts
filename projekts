@@ -1,0 +1,101 @@
+import tkinter as tk
+from tkinter import messagebox
+import json
+from datetime import datetime
+
+class TaskManager:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Uzdevumu pārvaldība")
+        
+        self.tasks = []
+        
+        # Galvenais loga dizains
+        self.title_label = tk.Label(root, text="Uzdevumu pārvaldība", font=("Arial", 16))
+        self.title_label.pack(pady=10)
+        
+        # Uzdevumu pievienošana
+        self.add_task_button = tk.Button(root, text="Pievienot uzdevumu", command=self.add_task)
+        self.add_task_button.pack(pady=10)
+        
+        self.tasks_listbox = tk.Listbox(root, height=10, width=50)
+        self.tasks_listbox.pack(pady=10)
+        
+        self.load_tasks()
+        self.update_task_list()
+    
+    def load_tasks(self):
+        """Ielādē uzdevumus no JSON faila"""
+        try:
+            with open("tasks.json", "r") as file:
+                self.tasks = json.load(file)
+        except FileNotFoundError:
+            self.tasks = []
+    
+    def save_tasks(self):
+        """Saglabā uzdevumus uz failu"""
+        with open("tasks.json", "w") as file:
+            json.dump(self.tasks, file)
+    
+    def add_task(self):
+        """Atver logu uzdevuma pievienošanai"""
+        self.add_window = tk.Toplevel(self.root)
+        self.add_window.title("Pievienot uzdevumu")
+        
+        self.name_label = tk.Label(self.add_window, text="Nosaukums")
+        self.name_label.pack()
+        self.name_entry = tk.Entry(self.add_window)
+        self.name_entry.pack()
+        
+        self.description_label = tk.Label(self.add_window, text="Apraksts")
+        self.description_label.pack()
+        self.description_entry = tk.Entry(self.add_window)
+        self.description_entry.pack()
+        
+        self.priority_label = tk.Label(self.add_window, text="Prioritāte (Zema/Vidēja/Augsta)")
+        self.priority_label.pack()
+        self.priority_entry = tk.Entry(self.add_window)
+        self.priority_entry.pack()
+        
+        self.date_label = tk.Label(self.add_window, text="Termiņš (GGGG-MM-DD)")
+        self.date_label.pack()
+        self.date_entry = tk.Entry(self.add_window)
+        self.date_entry.pack()
+        
+        self.submit_button = tk.Button(self.add_window, text="Pievienot", command=self.submit_task)
+        self.submit_button.pack()
+    
+    def submit_task(self):
+        """Saglabā jauno uzdevumu"""
+        name = self.name_entry.get()
+        description = self.description_entry.get()
+        priority = self.priority_entry.get()
+        due_date = self.date_entry.get()
+        
+        if not name or not description or not priority or not due_date:
+            messagebox.showerror("Kļūda", "Visi lauki jāaizpilda!")
+            return
+        
+        task = {
+            "name": name,
+            "description": description,
+            "priority": priority,
+            "due_date": due_date,
+            "status": "Nepabeigts"
+        }
+        self.tasks.append(task)
+        self.save_tasks()
+        self.add_window.destroy()
+        self.update_task_list()
+    
+    def update_task_list(self):
+        """Atjaunina uzdevumu sarakstu"""
+        self.tasks_listbox.delete(0, tk.END)
+        for task in self.tasks:
+            self.tasks_listbox.insert(tk.END, f"{task['name']} - {task['priority']} - {task['due_date']} - {task['status']}")
+    
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TaskManager(root)
+    root.mainloop()
