@@ -7,20 +7,43 @@ class TaskManager:
     def __init__(self, root):
         self.root = root
         self.root.title("Uzdevumu pārvaldība")
+        self.root.geometry("600x600")  # Loga izmērs
         
         self.tasks = []
         
         # Galvenais loga dizains
-        self.title_label = tk.Label(root, text="Uzdevumu pārvaldība", font=("Arial", 16))
-        self.title_label.pack(pady=10)
+        self.title_label = tk.Label(root, text="Uzdevumu pārvaldība", font=("Arial", 20, "bold"), bg="#4CAF50", fg="white")
+        self.title_label.pack(fill="x", pady=10)
         
-        # Uzdevumu pievienošana
-        self.add_task_button = tk.Button(root, text="Pievienot uzdevumu", command=self.add_task)
-        self.add_task_button.pack(pady=10)
+        # Frame poga pievienošanai
+        self.button_frame = tk.Frame(root)
+        self.button_frame.pack(pady=10)
         
-        self.tasks_listbox = tk.Listbox(root, height=10, width=50)
-        self.tasks_listbox.pack(pady=10)
+        self.add_task_button = tk.Button(self.button_frame, text="Pievienot uzdevumu", command=self.add_task, width=20, bg="#4CAF50", fg="white", relief="raised", font=("Arial", 12))
+        self.add_task_button.grid(row=0, column=0, padx=10)
+
+        # Frame uzdevumu sarakstam
+        self.list_frame = tk.Frame(root)
+        self.list_frame.pack(pady=10)
+
+        self.tasks_listbox = tk.Listbox(self.list_frame, height=10, width=50, selectmode=tk.SINGLE, bg="#f4f4f4", font=("Arial", 12))
+        self.tasks_listbox.pack(side="left", fill="y", padx=10)
         
+        # Scrollbar pievienošana
+        self.scrollbar = tk.Scrollbar(self.list_frame, orient="vertical", command=self.tasks_listbox.yview)
+        self.scrollbar.pack(side="right", fill="y")
+        self.tasks_listbox.config(yscrollcommand=self.scrollbar.set)
+
+        # Dzēšanas un rediģēšanas pogas
+        self.action_frame = tk.Frame(root)
+        self.action_frame.pack(pady=10)
+
+        self.delete_button = tk.Button(self.action_frame, text="Dzēst uzdevumu", command=self.delete_task, width=20, bg="#f44336", fg="white", relief="raised", font=("Arial", 12))
+        self.delete_button.grid(row=0, column=0, padx=10)
+
+        self.edit_button = tk.Button(self.action_frame, text="Rediģēt uzdevumu", command=self.edit_task, width=20, bg="#FF9800", fg="white", relief="raised", font=("Arial", 12))
+        self.edit_button.grid(row=0, column=1, padx=10)
+
         self.load_tasks()
         self.update_task_list()
     
@@ -41,29 +64,30 @@ class TaskManager:
         """Atver logu uzdevuma pievienošanai"""
         self.add_window = tk.Toplevel(self.root)
         self.add_window.title("Pievienot uzdevumu")
+        self.add_window.geometry("400x400")
         
-        self.name_label = tk.Label(self.add_window, text="Nosaukums")
-        self.name_label.pack()
-        self.name_entry = tk.Entry(self.add_window)
-        self.name_entry.pack()
+        self.name_label = tk.Label(self.add_window, text="Nosaukums", font=("Arial", 12))
+        self.name_label.pack(pady=5)
+        self.name_entry = tk.Entry(self.add_window, font=("Arial", 12))
+        self.name_entry.pack(pady=5)
         
-        self.description_label = tk.Label(self.add_window, text="Apraksts")
-        self.description_label.pack()
-        self.description_entry = tk.Entry(self.add_window)
-        self.description_entry.pack()
+        self.description_label = tk.Label(self.add_window, text="Apraksts", font=("Arial", 12))
+        self.description_label.pack(pady=5)
+        self.description_entry = tk.Entry(self.add_window, font=("Arial", 12))
+        self.description_entry.pack(pady=5)
         
-        self.priority_label = tk.Label(self.add_window, text="Prioritāte (Zema/Vidēja/Augsta)")
-        self.priority_label.pack()
-        self.priority_entry = tk.Entry(self.add_window)
-        self.priority_entry.pack()
+        self.priority_label = tk.Label(self.add_window, text="Prioritāte (Zema/Vidēja/Augsta)", font=("Arial", 12))
+        self.priority_label.pack(pady=5)
+        self.priority_entry = tk.Entry(self.add_window, font=("Arial", 12))
+        self.priority_entry.pack(pady=5)
         
-        self.date_label = tk.Label(self.add_window, text="Termiņš (GGGG-MM-DD)")
-        self.date_label.pack()
-        self.date_entry = tk.Entry(self.add_window)
-        self.date_entry.pack()
+        self.date_label = tk.Label(self.add_window, text="Termiņš (GGGG-MM-DD)", font=("Arial", 12))
+        self.date_label.pack(pady=5)
+        self.date_entry = tk.Entry(self.add_window, font=("Arial", 12))
+        self.date_entry.pack(pady=5)
         
-        self.submit_button = tk.Button(self.add_window, text="Pievienot", command=self.submit_task)
-        self.submit_button.pack()
+        self.submit_button = tk.Button(self.add_window, text="Pievienot", command=self.submit_task, bg="#4CAF50", fg="white", relief="raised", font=("Arial", 12))
+        self.submit_button.pack(pady=20)
     
     def submit_task(self):
         """Saglabā jauno uzdevumu"""
@@ -71,6 +95,11 @@ class TaskManager:
         description = self.description_entry.get()
         priority = self.priority_entry.get()
         due_date = self.date_entry.get()
+        
+        # Prioritātes validācija
+        if priority not in ["Zema", "Vidēja", "Augsta"]:
+            messagebox.showerror("Kļūda", "Prioritātei jābūt vienai no šīm vērtībām: Zema, Vidēja, Augsta!")
+            return
         
         if not name or not description or not priority or not due_date:
             messagebox.showerror("Kļūda", "Visi lauki jāaizpilda!")
@@ -91,9 +120,84 @@ class TaskManager:
     def update_task_list(self):
         """Atjaunina uzdevumu sarakstu"""
         self.tasks_listbox.delete(0, tk.END)
-        for task in self.tasks:
-            self.tasks_listbox.insert(tk.END, f"{task['name']} - {task['priority']} - {task['due_date']} - {task['status']}")
+        for idx, task in enumerate(self.tasks):
+            self.tasks_listbox.insert(tk.END, f"{idx + 1}. {task['name']} - {task['priority']} - {task['due_date']} - {task['status']}")
     
+    def delete_task(self):
+        """Dzēst uzdevumu no saraksta"""
+        try:
+            selected_index = self.tasks_listbox.curselection()[0]
+            del self.tasks[selected_index]
+            self.save_tasks()
+            self.update_task_list()
+        except IndexError:
+            messagebox.showwarning("Kļūda", "Izvēlieties uzdevumu, kuru dzēst.")
+    
+    def edit_task(self):
+        """Rediģēt uzdevumu"""
+        try:
+            selected_index = self.tasks_listbox.curselection()[0]
+            task = self.tasks[selected_index]
+            self.edit_window = tk.Toplevel(self.root)
+            self.edit_window.title("Rediģēt uzdevumu")
+            self.edit_window.geometry("400x400")
+            
+            self.name_label = tk.Label(self.edit_window, text="Nosaukums", font=("Arial", 12))
+            self.name_label.pack(pady=5)
+            self.name_entry = tk.Entry(self.edit_window, font=("Arial", 12))
+            self.name_entry.insert(0, task["name"])
+            self.name_entry.pack(pady=5)
+            
+            self.description_label = tk.Label(self.edit_window, text="Apraksts", font=("Arial", 12))
+            self.description_label.pack(pady=5)
+            self.description_entry = tk.Entry(self.edit_window, font=("Arial", 12))
+            self.description_entry.insert(0, task["description"])
+            self.description_entry.pack(pady=5)
+            
+            self.priority_label = tk.Label(self.edit_window, text="Prioritāte (Zema/Vidēja/Augsta)", font=("Arial", 12))
+            self.priority_label.pack(pady=5)
+            self.priority_entry = tk.Entry(self.edit_window, font=("Arial", 12))
+            self.priority_entry.insert(0, task["priority"])
+            self.priority_entry.pack(pady=5)
+            
+            self.date_label = tk.Label(self.edit_window, text="Termiņš (GGGG-MM-DD)", font=("Arial", 12))
+            self.date_label.pack(pady=5)
+            self.date_entry = tk.Entry(self.edit_window, font=("Arial", 12))
+            self.date_entry.insert(0, task["due_date"])
+            self.date_entry.pack(pady=5)
+            
+            self.submit_button = tk.Button(self.edit_window, text="Saglabāt izmaiņas", command=lambda: self.submit_edit(selected_index), bg="#FF9800", fg="white", relief="raised", font=("Arial", 12))
+            self.submit_button.pack(pady=20)
+        
+        except IndexError:
+            messagebox.showwarning("Kļūda", "Izvēlieties uzdevumu, kuru rediģēt.")
+    
+    def submit_edit(self, index):
+        """Saglabā rediģētās izmaiņas"""
+        name = self.name_entry.get()
+        description = self.description_entry.get()
+        priority = self.priority_entry.get()
+        due_date = self.date_entry.get()
+        
+        # Prioritātes validācija
+        if priority not in ["Zema", "Vidēja", "Augsta"]:
+            messagebox.showerror("Kļūda", "Prioritātei jābūt vienai no šīm vērtībām: Zema, Vidēja, Augsta!")
+            return
+        
+        if not name or not description or not priority or not due_date:
+            messagebox.showerror("Kļūda", "Visi lauki jāaizpilda!")
+            return
+        
+        self.tasks[index] = {
+            "name": name,
+            "description": description,
+            "priority": priority,
+            "due_date": due_date,
+            "status": "Nepabeigts"
+        }
+        self.save_tasks()
+        self.edit_window.destroy()
+        self.update_task_list()
 
 if __name__ == "__main__":
     root = tk.Tk()
